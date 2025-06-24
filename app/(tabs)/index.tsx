@@ -1,75 +1,130 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import DeleteModal from "@/components/DeleteModal";
+import DropList from "@/components/DropList";
+import SearchAndFilterSection from "@/components/SearchAndFilter";
+import TaskItem from "@/components/TaskItem";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setName } from "@/store/createTaskSlice";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export interface Task {
+  id: number;
+  name: string;
+  isCompleted: boolean;
+  priority: string;
+}
+
+const indexMapping = ["", "true", "false"];
 
 export default function HomeScreen() {
+  const { name, priority } = useAppSelector((state) => state.createTask);
+  const { searchQuery, filterdPriority, selectedIndex } = useAppSelector(
+    (state) => state.searchAndFilter
+  );
+  const dispatch = useAppDispatch();
+  const [isFocus, setIsFocus] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery != null && searchQuery !== "")
+      params.append("name", searchQuery);
+    if (filterdPriority != null && filterdPriority !== "")
+      params.append("priority", filterdPriority);
+    if (selectedIndex !== 0) {
+      params.append("isCompleted", indexMapping[selectedIndex]);
+    }
+    fetch(`http://192.168.50.234:8080/api/tasks?${params.toString()}`)
+      .then(async (response) => {
+        const json = await response.json();
+        if (response.ok) return json;
+      })
+      .then((json) => setTasks(json.tasks));
+  }, [searchQuery, filterdPriority, selectedIndex]);
+
+  const handleCreateTask = () => {
+    fetch("http://192.168.50.234:8080/api/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        isCompleted: false,
+        priority,
+      }),
+    })
+      .then(async (response) => {
+        const json = await response.json();
+        if (response.status === 201) return json;
+      })
+      .then((json) => {
+        setIsFocus(false);
+        dispatch(setName(""));
+        setTasks([...tasks, json.task]);
+      });
+    dispatch(setName(""));
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaProvider>
+      <DeleteModal />
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>Your to do</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Add new task"
+            style={[styles.input, isFocus && { borderBottomWidth: 1 }]}
+            onChangeText={(text) => dispatch(setName(text))}
+            value={name}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+          />
+          <AntDesign
+            name="plussquare"
+            size={45}
+            color="black"
+            onPress={() => handleCreateTask()}
+          />
+        </View>
+        <DropList />
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {tasks.map((task) => (
+            <TaskItem
+              key={task.id}
+              name={task.name}
+              isCompleted={task.isCompleted}
+            />
+          ))}
+        </ScrollView>
+        <SearchAndFilterSection />
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    display: "flex",
+    marginTop: 10,
+    paddingHorizontal: 30,
+    gap: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 40,
+    fontWeight: 700,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  inputWrapper: {
+    display: "flex",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 20,
+  },
+  input: {
+    flex: 1,
+    padding: 10,
+    fontSize: 18,
   },
 });
