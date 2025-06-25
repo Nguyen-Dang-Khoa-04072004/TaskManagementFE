@@ -1,9 +1,9 @@
-# Mobile taskmanagement application
+# Mobile Taskmanagement Application
 
 This is a simple mobile user interface for task management application with react native expo
 
 
-#Installation
+# Installation
 1. Clone the repo
    ```bash
    git clone https://github.com/Nguyen-Dang-Khoa-04072004/TaskManagementFE
@@ -29,9 +29,6 @@ In the output, you'll find options to open the app in a
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-# SCREENSHOTS
-
 
 # DEMO
 ## #1 - Create a new task
