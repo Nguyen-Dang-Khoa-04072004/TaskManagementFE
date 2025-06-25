@@ -31,3 +31,8 @@ In the output, you'll find options to open the app in a
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
 # SCREENSHOTS
+
+
+# DEMO
+## Create a new task
+![video demo 1](https://github.com/user-attachments/assets/bcf0f847-cc70-4731-8fc0-dca4284608bb)
