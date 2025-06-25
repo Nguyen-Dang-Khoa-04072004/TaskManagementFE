@@ -51,7 +51,7 @@ export default function SearchAndFilterSection() {
           }}
         >
           <Text style={styles.title}>Search</Text>
-          <Feather name="x" size={25} color="black" onPress={()=> dispatch(setFilterOpen())}/>
+          {/* <Feather name="x" size={25} color="black" onPress={()=> dispatch(setFilterOpen())}/> */}
         </View>
         <View style={styles.wrapper}>
           <TextInput
