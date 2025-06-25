@@ -34,8 +34,9 @@ In the output, you'll find options to open the app in a
 
 
 # DEMO
-## Create a new task, update status, delete a task, search a task with name
+## #1 - Create a new task
 ![video demo 1](https://github.com/user-attachments/assets/bcf0f847-cc70-4731-8fc0-dca4284608bb)
+## #2 - Update status, delete a task, search a task with name
 ![video demo 2](https://github.com/user-attachments/assets/ba5f7130-af8f-4134-927b-891122e60ea6)
-## Filter by status, Filter by priority
-
+## #3 - Filter by status, Filter by priority
+![video demo 3](https://github.com/user-attachments/assets/e9a51fce-34bc-4e1d-9d16-354892abf6a4)
