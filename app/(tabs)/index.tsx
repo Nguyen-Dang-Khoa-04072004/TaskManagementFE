@@ -148,8 +148,8 @@ export default function HomeScreen() {
               />
             ))}
           </ScrollView>
-          {filterOpen && <SearchAndFilterSection />}
-          {!filterOpen && (
+          <SearchAndFilterSection />
+          {/* {!filterOpen && (
             <View
               style={{
                 position: "absolute",
@@ -165,7 +165,6 @@ export default function HomeScreen() {
                 borderRadius: "50%",
               }}
             >
-              {/* <Ionicons name="filter-circle" size={50} color="#8c8c8c" onPress={() => dispatch(setFilterOpen())}/> */}
               <MaterialIcons
                 name="filter-alt"
                 size={30}
@@ -173,7 +172,7 @@ export default function HomeScreen() {
                 onPress={() => dispatch(setFilterOpen())}
               />
             </View>
-          )}
+          )} */}
           <Toast topOffset={65} config={toastConfig} />
         </SafeAreaView>
       </SafeAreaProvider>
