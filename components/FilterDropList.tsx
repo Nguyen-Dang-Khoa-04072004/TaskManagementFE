@@ -6,7 +6,7 @@ import { primary } from "@/constants/Colors";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { filterPriority } from "@/store/filterSlice";
 const data = [
-  { label: "ALL", value: "" },
+  { label: "All", value: "" },
   { label: "High", value: "HIGH" },
   { label: "Medium", value: "MEDIUM" },
   { label: "Low", value: "LOW" },

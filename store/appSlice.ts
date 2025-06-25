@@ -7,7 +7,8 @@ interface initialStateType {
     tasks: Task[];
     deleteTaskId: null | number;
     isLoading: boolean,
-    isUpdate: boolean
+    isUpdate: boolean,
+    filterOpen: boolean
 }
 
 const initialState : initialStateType  = {
@@ -15,7 +16,8 @@ const initialState : initialStateType  = {
     tasks : [],
     deleteTaskId: null,
     isLoading: false,
-    isUpdate: false
+    isUpdate: false,
+    filterOpen: false
 }
 
 const appSlice = createSlice({
@@ -36,11 +38,14 @@ const appSlice = createSlice({
         },
         update:(state) => {
             state.isUpdate = !state.isUpdate
+        },
+        setFilterOpen :(state)=> {
+            state.filterOpen = !state.filterOpen
         }
     }
 })
 
-export const {setIsOpen, setTasks, setDeleteTaskId, setLoading, update} = appSlice.actions
+export const {setIsOpen, setTasks, setDeleteTaskId, setLoading, update, setFilterOpen} = appSlice.actions
 
 
 export default appSlice.reducer

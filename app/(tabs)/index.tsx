@@ -4,17 +4,19 @@ import SearchAndFilterSection from "@/components/SearchAndFilter";
 import TaskItem from "@/components/TaskItem";
 import { useDebouce } from "@/hooks/useDebouce";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { setLoading, setTasks, update } from "@/store/appSlice";
+import { setFilterOpen, setLoading, setTasks, update } from "@/store/appSlice";
 import { setName } from "@/store/createTaskSlice";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useEffect, useInsertionEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import LoadingDots from "react-native-loading-dots";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/constants/ToastConfig";
 import { apiDomain, apiPort } from "@/constants/api";
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 export interface Task {
   id: number;
   name: string;
@@ -31,7 +33,9 @@ export default function HomeScreen() {
   );
   const dispatch = useAppDispatch();
   const [isFocus, setIsFocus] = useState(false);
-  const { tasks, isLoading, isUpdate } = useAppSelector((state) => state.app);
+  const { tasks, isLoading, isUpdate, filterOpen } = useAppSelector(
+    (state) => state.app
+  );
   const deboucedSearch = useDebouce(searchQuery, 500);
   useEffect(() => {
     dispatch(setLoading(true));
@@ -94,59 +98,86 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaProvider>
-      <View style={[isLoading ? styles.loadingView : { display: "none" }]}>
-        <LoadingDots dots={3} colors={["#4d4d4d", "#4d4d4d", "#4d4d4d"]} />
-      </View>
-      <DeleteModal />
-      <SafeAreaView style={styles.container}>
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text style={styles.title}>Your to do</Text>
-          <Text style={styles.remindMessage}>
-            Task todo:{" "}
-            {tasks.filter((task) => task.isCompleted === false).length}
-          </Text>
+    <GestureHandlerRootView>
+      <SafeAreaProvider>
+        <View style={[isLoading ? styles.loadingView : { display: "none" }]}>
+          <LoadingDots dots={3} colors={["#4d4d4d", "#4d4d4d", "#4d4d4d"]} />
         </View>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholder="Add new task"
-            placeholderTextColor={"#595959"}
-            style={[styles.input, isFocus && { borderBottomWidth: 1 }]}
-            onChangeText={(text) => dispatch(setName(text))}
-            value={name}
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-          />
-          <AntDesign
-            name="plussquare"
-            size={45}
-            color="black"
-            onPress={() => handleCreateTask()}
-          />
-        </View>
-        <DropList />
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {tasks.map((task) => (
-            <TaskItem
-              id={task.id}
-              key={task.id}
-              name={task.name}
-              priority={task.priority}
-              isCompleted={task.isCompleted}
+        <DeleteModal />
+        <SafeAreaView style={styles.container}>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={styles.title}>Your to do</Text>
+            <Text style={styles.remindMessage}>
+              Task todo:{" "}
+              {tasks.filter((task) => task.isCompleted === false).length}
+            </Text>
+          </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholder="Add new task"
+              placeholderTextColor={"#595959"}
+              style={[styles.input, isFocus && { borderBottomWidth: 1 }]}
+              onChangeText={(text) => dispatch(setName(text))}
+              value={name}
+              onFocus={() => setIsFocus(true)}
+              onBlur={() => setIsFocus(false)}
             />
-          ))}
-        </ScrollView>
-        <SearchAndFilterSection />
-        <Toast topOffset={65} config={toastConfig} />
-      </SafeAreaView>
-    </SafeAreaProvider>
+            <AntDesign
+              name="plussquare"
+              size={45}
+              color="black"
+              onPress={() => handleCreateTask()}
+            />
+          </View>
+          <DropList />
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {tasks.map((task) => (
+              <TaskItem
+                id={task.id}
+                key={task.id}
+                name={task.name}
+                priority={task.priority}
+                isCompleted={task.isCompleted}
+              />
+            ))}
+          </ScrollView>
+          {filterOpen && <SearchAndFilterSection />}
+          {!filterOpen && (
+            <View
+              style={{
+                position: "absolute",
+                zIndex: 60,
+                right: 30,
+                bottom: 50,
+                backgroundColor: "#0066ff",
+                width: 50,
+                height: 50,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "50%",
+              }}
+            >
+              {/* <Ionicons name="filter-circle" size={50} color="#8c8c8c" onPress={() => dispatch(setFilterOpen())}/> */}
+              <MaterialIcons
+                name="filter-alt"
+                size={30}
+                color="white"
+                onPress={() => dispatch(setFilterOpen())}
+              />
+            </View>
+          )}
+          <Toast topOffset={65} config={toastConfig} />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -193,6 +224,6 @@ const styles = StyleSheet.create({
   },
   remindMessage: {
     fontSize: 16,
-    fontWeight:600
+    fontWeight: 600,
   },
 });
