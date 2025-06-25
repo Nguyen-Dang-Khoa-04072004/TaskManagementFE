@@ -1,23 +1,42 @@
 import { useAppDispatch, useAppSelector } from "@/store";
-import { setIsOpen } from "@/store/appSlice";
+import {
+  setDeleteTaskId,
+  setIsOpen,
+  setLoading,
+  setTasks,
+} from "@/store/appSlice";
 import { Modal, Pressable, StyleSheet, View, Text } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import Toast from "react-native-toast-message";
+import { apiDomain, apiPort } from "@/constants/api";
 export default function DeleteModal() {
-  const isOpen = useAppSelector((state) => state.app.isOpen);
+  const { isOpen, tasks, deleteTaskId } = useAppSelector((state) => state.app);
   const dispatch = useAppDispatch();
 
-  const handleDelete = (id : number) => {
-    // fetch("http://192.168.50.234:8080/api/tasks", {
-    //   method: "DELETE",
-    // })
-    //   .then(async (response) => {
-    //     const json = await response.json();
-    //     if (response.status === 201) return json;
-    //   })
-    //   .then((json) => {
-    //     setTasks([...tasks, json.task]);
-    //   });
-  }
+  const handleDelete = () => {
+    if (deleteTaskId != null) {
+      dispatch(setLoading(true));
+      fetch(`http://${apiDomain}:${apiPort}/api/tasks/${deleteTaskId}`, {
+        method: "DELETE",
+      })
+        .then((response) => {
+          if (response.status === 204) {
+            dispatch(
+              setTasks(tasks.filter((task) => task.id !== deleteTaskId))
+            );
+            dispatch(setDeleteTaskId(null));
+            dispatch(setLoading(false));
+            Toast.show({
+                type:"success",
+                text1:"Success",
+                text2: "Delete a task successfully!"
+            })
+          }
+        })
+        .catch((e) => console.log(e));
+    }
+    dispatch(setIsOpen(!isOpen));
+  };
   return (
     <Modal
       animationType="slide"
@@ -31,11 +50,13 @@ export default function DeleteModal() {
         <View style={styles.modalView}>
           <Feather name="x-circle" size={60} color="red" />
           <Text style={styles.modalText}>Are you sure?</Text>
-          <Text style={styles.confirmText}>Do you really want to delete this task ?</Text>
+          <Text style={styles.confirmText}>
+            Do you really want to delete this task ?
+          </Text>
           <View style={styles.btnWrapper}>
             <Pressable
-              style={[styles.button, styles.buttonDelete,]}
-              onPress={() => handleDelete}
+              style={[styles.button, styles.buttonDelete]}
+              onPress={() => handleDelete()}
             >
               <Text style={styles.textStyle}>Delete</Text>
             </Pressable>
@@ -72,14 +93,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    display:'flex',
-    justifyContent:'center',
-    gap:10
+    display: "flex",
+    justifyContent: "center",
+    gap: 10,
   },
   button: {
     borderRadius: 8,
     padding: 10,
-    flex:1,
+    flex: 1,
     elevation: 2,
   },
   buttonCancel: {
@@ -99,16 +120,16 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     textAlign: "center",
   },
-  confirmText:{
-    textAlign:'center',
-    fontSize:17,
-    fontWeight:500
+  confirmText: {
+    textAlign: "center",
+    fontSize: 17,
+    fontWeight: 500,
   },
-  btnWrapper:{
-    display:'flex',
-    flexDirection:'row',
-    gap:20,
-    paddingHorizontal:20,
-    paddingVertical:10
-  }
+  btnWrapper: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
 });

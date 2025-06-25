@@ -2,12 +2,18 @@ import DeleteModal from "@/components/DeleteModal";
 import DropList from "@/components/DropList";
 import SearchAndFilterSection from "@/components/SearchAndFilter";
 import TaskItem from "@/components/TaskItem";
+import { useDebouce } from "@/hooks/useDebouce";
 import { useAppDispatch, useAppSelector } from "@/store";
+import { setLoading, setTasks, update } from "@/store/appSlice";
 import { setName } from "@/store/createTaskSlice";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useEffect, useState } from "react";
+import { useEffect, useInsertionEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import LoadingDots from "react-native-loading-dots";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "@/constants/ToastConfig";
+import { apiDomain, apiPort } from "@/constants/api";
 
 export interface Task {
   id: number;
@@ -25,8 +31,10 @@ export default function HomeScreen() {
   );
   const dispatch = useAppDispatch();
   const [isFocus, setIsFocus] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const { tasks, isLoading, isUpdate } = useAppSelector((state) => state.app);
+  const deboucedSearch = useDebouce(searchQuery, 500);
   useEffect(() => {
+    dispatch(setLoading(true));
     const params = new URLSearchParams();
     if (searchQuery != null && searchQuery !== "")
       params.append("name", searchQuery);
@@ -35,16 +43,21 @@ export default function HomeScreen() {
     if (selectedIndex !== 0) {
       params.append("isCompleted", indexMapping[selectedIndex]);
     }
-    fetch(`http://192.168.50.234:8080/api/tasks?${params.toString()}`)
+    fetch(`http://${apiDomain}:${apiPort}/api/tasks?${params.toString()}`)
       .then(async (response) => {
         const json = await response.json();
         if (response.ok) return json;
       })
-      .then((json) => setTasks(json.tasks));
-  }, [searchQuery, filterdPriority, selectedIndex]);
+      .then((json) => {
+        dispatch(setTasks(json.tasks));
+        dispatch(setLoading(false));
+      })
+      .catch((e) => console.log(e));
+  }, [deboucedSearch, filterdPriority, selectedIndex, isUpdate]);
 
   const handleCreateTask = () => {
-    fetch("http://192.168.50.234:8080/api/tasks", {
+    dispatch(setLoading(true));
+    fetch(`http://${apiDomain}:${apiPort}/api/tasks`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,23 +71,53 @@ export default function HomeScreen() {
       .then(async (response) => {
         const json = await response.json();
         if (response.status === 201) return json;
+        else
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: json.message,
+          });
       })
       .then((json) => {
         setIsFocus(false);
+        dispatch(setLoading(false));
         dispatch(setName(""));
-        setTasks([...tasks, json.task]);
-      });
-    dispatch(setName(""));
+        dispatch(update());
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: json.message,
+        });
+      })
+      .catch((e) => console.log(e))
+      .finally(() => dispatch(setName("")));
   };
 
   return (
     <SafeAreaProvider>
+      <View style={[isLoading ? styles.loadingView : { display: "none" }]}>
+        <LoadingDots dots={3} colors={["#4d4d4d", "#4d4d4d", "#4d4d4d"]} />
+      </View>
       <DeleteModal />
       <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Your to do</Text>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={styles.title}>Your to do</Text>
+          <Text style={styles.remindMessage}>
+            Task todo:{" "}
+            {tasks.filter((task) => task.isCompleted === false).length}
+          </Text>
+        </View>
         <View style={styles.inputWrapper}>
           <TextInput
             placeholder="Add new task"
+            placeholderTextColor={"#595959"}
             style={[styles.input, isFocus && { borderBottomWidth: 1 }]}
             onChangeText={(text) => dispatch(setName(text))}
             value={name}
@@ -92,13 +135,16 @@ export default function HomeScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {tasks.map((task) => (
             <TaskItem
+              id={task.id}
               key={task.id}
               name={task.name}
+              priority={task.priority}
               isCompleted={task.isCompleted}
             />
           ))}
         </ScrollView>
         <SearchAndFilterSection />
+        <Toast topOffset={65} config={toastConfig} />
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -108,9 +154,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     display: "flex",
-    marginTop: 10,
     paddingHorizontal: 30,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    position: "relative",
+    zIndex: 50,
     gap: 20,
+    backgroundColor: "white",
   },
   title: {
     fontSize: 40,
@@ -126,5 +178,21 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     fontSize: 18,
+  },
+  loadingView: {
+    position: "absolute",
+    zIndex: 1000,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  remindMessage: {
+    fontSize: 16,
+    fontWeight:600
   },
 });

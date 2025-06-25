@@ -12,6 +12,6 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ],
+, "constants/ToastConfig.js"  ],
   "extends": "expo/tsconfig.base"
 }

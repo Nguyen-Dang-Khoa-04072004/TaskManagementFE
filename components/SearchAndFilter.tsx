@@ -5,6 +5,9 @@ import { primary } from "@/constants/Colors";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { filterStatus, search } from "@/store/filterSlice";
 import FilterDropList from "./FilterDropList";
+import { useDebouce } from "@/hooks/useDebouce";
+import { Task } from "@/app/(tabs)";
+import { useState } from "react";
 
 interface CheckBoxProps {
   index: number;
@@ -30,29 +33,29 @@ function CheckBoxComponent({ index, title }: CheckBoxProps) {
 }
 
 export default function SearchAndFilterSection() {
+    const [onFocus, setOnFocus] = useState(false)
   const searchQuery = useAppSelector(
     (state) => state.searchAndFilter.searchQuery
   );
   const dispatch = useAppDispatch();
   return (
-    <View>
+    <View style={onFocus ? {height:352} : {}}>
       <View style={styles.sectionWrapper}>
         <Text style={styles.title}>Search</Text>
         <View style={styles.wrapper}>
           <TextInput
             style={styles.input}
             placeholder="Search a task"
+            placeholderTextColor={"#595959"}
             value={searchQuery}
             onChangeText={(text) => dispatch(search(text))}
+            onFocus={()=>setOnFocus(true)}
+            onBlur={()=> setOnFocus(false)}
           />
           <MaterialIcons
             name="search"
             size={30}
             color="black"
-            onPress={() => {
-              console.log(searchQuery);
-              dispatch(search(""));
-            }}
           />
         </View>
       </View>
